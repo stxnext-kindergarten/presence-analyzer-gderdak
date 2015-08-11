@@ -2,17 +2,16 @@
 """
 Helper functions used in views.
 """
-
 import csv
-from json import dumps
-from functools import wraps
+import calendar
+import logging
+
 from datetime import datetime
-
 from flask import Response
-
+from functools import wraps
+from json import dumps
 from presence_analyzer.main import app
 
-import logging
 log = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
@@ -101,3 +100,21 @@ def mean(items):
     Calculates arithmetic mean. Returns zero for empty lists.
     """
     return float(sum(items)) / len(items) if len(items) > 0 else 0
+
+
+def mean_presence_hours(items):
+    """
+    Calculate start and end of presence time of given user grouped by weekday.
+    """
+    week = {i: {'start': [], 'end': []} for i in xrange(7)}
+    for day in items:
+        week[day.weekday()]['start'].append(
+            seconds_since_midnight(items[day]['start'])
+        )
+        week[day.weekday()]['end'].append(
+            seconds_since_midnight(items[day]['end'])
+        )
+    return [
+        [calendar.day_abbr[k], mean(v['start']), mean(v['end'])]
+        for k, v in week.iteritems()
+    ]

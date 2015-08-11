@@ -15,8 +15,9 @@ from presence_analyzer import main, utils, views
 TEST_DATA_CSV = os.path.join(
     os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'test_data.csv'
 )
-
 # pylint: disable=maybe-no-member, too-many-public-methods
+
+
 class PresenceAnalyzerViewsTestCase(unittest.TestCase):
     """
     Views tests.
@@ -112,6 +113,29 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
             ]
         )
 
+    def test_mean_presence_hours_view(self):
+        """
+        Test mean presence time view.
+        """
+        response = self.client.get('/api/v1/presence_start_end/1')
+        self.assertEqual(response.status_code, 404)
+        response = self.client.get('/api/v1/presence_start_end/10')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content_type, 'application/json')
+        test_data = json.loads(response.data)
+        self.assertListEqual(
+            test_data,
+            [
+                ['Mon', 0, 0],
+                ['Tue', 34745.0, 64792.0],
+                ['Wed', 33592.0, 58057.0],
+                ['Thu', 38926.0, 62631.0],
+                ['Fri', 0, 0],
+                ['Sat', 0, 0],
+                ['Sun', 0, 0]
+            ]
+        )
+
 
 class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
     """
@@ -187,6 +211,25 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         self.assertEqual(utils.mean([2, 3.25, 5, 10, 5.4]), 5.13)
         self.assertEqual(utils.mean([]), 0)
         self.assertEqual(utils.mean([-1, -3]), -2)
+
+    def test_mean_presence_hours(self):
+        """
+        Test for calculate mean presence start/end time of given user.
+        """
+        data = utils.get_data()
+        test_user = utils.mean_presence_hours(data[10])
+        self.assertListEqual(
+            test_user,
+            [
+                ['Mon', 0, 0],
+                ['Tue', 34745.0, 64792.0],
+                ['Wed', 33592.0, 58057.0],
+                ['Thu', 38926.0, 62631.0],
+                ['Fri', 0, 0],
+                ['Sat', 0, 0],
+                ['Sun', 0, 0]
+            ]
+        )
 
 
 def suite():
