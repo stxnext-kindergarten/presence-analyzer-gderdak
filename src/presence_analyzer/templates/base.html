@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Presence analyzer</title>
+    <meta name="keywords" content="" />
+    <meta name="description" content=""/>
+    <meta name="author" content="STX Next sp. z o.o."/>
+    <meta name="viewport" content="width=device-width; initial-scale=1.0">
+    <link href="{{ url_for('static', filename='css/normalize.css') }}" media="all" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static', filename='css/style.css') }}" media="all" rel="stylesheet" type="text/css" />
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+    function parseInterval(value) {
+        var result = new Date(1, 1, 1);
+        result.setMilliseconds(value * 1000);
+        return result;
+    }
+    </script>
+    <script type="text/javascript">
+    {% block google_load %}{% endblock %}
+        (function($) {
+        $(document).ready(function() {
+            var loading = $('#loading');
+            $.getJSON("{{ url_for('users_view') }}", function(result) {
+                var dropdown = $("#user_id");
+                $.each(result, function(item) {
+                    dropdown.append($("<option />").val(this.user_id).text(this.name));
+                });
+                dropdown.show();
+                loading.hide();
+            });
+            $('#user_id').change(function() {
+                var selected_user = $("#user_id").val(),
+                    chart_div = $('#chart_div');
+                if (selected_user) {
+                    loading.show();
+                    chart_div.hide();
+                    {% block getJson %}{% endblock %}
+                }
+            });
+        });
+    })(jQuery);
+</script>
+</head>
+<body>
+    <div id="main">
+        <div id="header">
+            <h1>Presence analyzer</h1>
+            {% set navigation_bar = [
+                ('/presence_weekday', 'presence_weekday', 'Presence by weekday'),
+                ('/mean_time_weekday', 'mean_time_weekday', 'Presence mean time'),
+                ('/presence_start_end', 'presence_start_end', 'Presence mean start-end'),
+            ] %}
+            {% set active_page = active_page|default('presence_weekday') %}
+            <ul>
+                {% for href, id, caption in navigation_bar %}
+                    <li{% if id == active_page %} id="selected"{% endif %}><a href="{{ href|e }}">{{ caption|e }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div id="content">
+            <h2>{% block content_title %}{% endblock %}</h2>
+            <p>
+                <select id="user_id" style="display: none">
+                    <option value="">--</option>
+                </select>
+                <div id="chart_div" style="display: none"></div>
+                <div id="loading">
+                    <img src="{{ url_for('static', filename='/img/loading.gif') }}"/>
+                </div>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
