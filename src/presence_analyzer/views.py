@@ -4,12 +4,13 @@ Defines views.
 """
 
 import calendar
+import jinja2
 import logging
 
-from flask import redirect, abort
+from flask import abort, redirect, render_template, url_for
 from presence_analyzer.main import app
 from presence_analyzer.utils import (
-    jsonify, get_data, mean, group_by_weekday, mean_presence_hours
+    get_data, group_by_weekday, jsonify, mean, mean_presence_hours
 )
 
 log = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -20,7 +21,10 @@ def mainpage():
     """
     Redirects to front page.
     """
-    return redirect('/static/presence_weekday.html')
+    return redirect(url_for(
+        'render_correct_template',
+        template_name='presence_weekday'
+    ))
 
 
 @app.route('/api/v1/users', methods=['GET'])
@@ -88,3 +92,18 @@ def mean_presence_hours_view(user_id):
         log.debug('User %s not found!', user_id)
         abort(404)
     return mean_presence_hours(data[user_id])
+
+
+@app.route('/<template_name>', methods=['GET'])
+def render_correct_template(template_name):
+    """
+    Check and render correct template for given url.
+    """
+    try:
+        return render_template(template_name + '.html')
+    except jinja2.TemplateNotFound:
+        log.debug('Template %s not found!', template_name + '.html')
+        abort(404)
+    except jinja2.TemplateSyntaxError:
+        log.debug('Template syntax error in %s!', template_name + '.html')
+        abort(500)

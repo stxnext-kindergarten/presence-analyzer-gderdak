@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block google_load %}
+    google.load("visualization", "1", {packages: ["corechart", "timeline"], 'language': 'pl'});   
+{% endblock %}
+{% block getJson %}
+$.getJSON("{{ url_for('mean_presence_hours_view', user_id=0) }}"+selected_user, function(result) {
+    $.each(result, function(index, value) {
+        value[1] = parseInterval(value[1]);
+        value[2] = parseInterval(value[2]);
+    });
+    var data = new google.visualization.DataTable(),
+    options = {
+        hAxis: {title: 'Weekday'}
+    },
+    formatter = new google.visualization.DateFormat(
+        {pattern: 'HH:mm:ss'}
+        );
+    data.addColumn('string', 'Weekday');
+    data.addColumn('datetime', 'Start time (h:m:s)');
+    data.addColumn('datetime', 'End time (h:m:s)');
+    data.addRows(result);
+    formatter.format(data, 1);
+    formatter.format(data, 2);
+    chart_div.show();
+    loading.hide();
+    var chart = new google.visualization.Timeline(chart_div[0]);
+    chart.draw(data, options);
+});
+{% endblock %}
+{% set active_page = "presence_start_end" %}
+{% block content_title %}Presence mean time{% endblock %}
