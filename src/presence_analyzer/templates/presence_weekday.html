@@ -1,9 +1,9 @@
-{% extends "base.html" %}
-{% block google_load %}
+<%inherit file="base.html"/>
+<%block name="google_load">
     google.load("visualization", "1", {packages: ["corechart"], 'language': 'pl'});
-{% endblock %}
-{% block getJson %}
-$.getJSON("{{ url_for('presence_weekday_view', user_id=0) }}"+selected_user, function(result) {
+</%block>
+<%block name="getJson">
+$.getJSON("${url_for('presence_weekday_view', user_id=0)}"+selected_user, function(result) {
     var data = google.visualization.arrayToDataTable(result),
         options = {};
     chart_div.show();
@@ -11,6 +11,5 @@ $.getJSON("{{ url_for('presence_weekday_view', user_id=0) }}"+selected_user, fun
     var chart = new google.visualization.PieChart(chart_div[0]);
     chart.draw(data, options);
 });
-{% endblock %}
-{% set active_page = "presence_weekday" %}
-{% block content_title %}Presence mean time{% endblock %}
+</%block>
+<%block name="content_title">Presence mean time</%block>
