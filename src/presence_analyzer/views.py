@@ -4,10 +4,13 @@ Defines views.
 """
 
 import calendar
-import jinja2
 import logging
 
-from flask import abort, redirect, render_template, url_for
+from flask import abort, redirect, url_for
+from flask.ext.mako import render_template
+from mako import exceptions
+from mako.exceptions import TopLevelLookupException
+
 from presence_analyzer.main import app
 from presence_analyzer.utils import (
     get_data, group_by_weekday, jsonify, mean, mean_presence_hours
@@ -101,9 +104,9 @@ def render_correct_template(template_name):
     """
     try:
         return render_template(template_name + '.html')
-    except jinja2.TemplateNotFound:
-        log.debug('Template %s not found!', template_name + '.html')
+    except TopLevelLookupException:
+        log.debug('Template %s.html not found.', template_name)
         abort(404)
-    except jinja2.TemplateSyntaxError:
-        log.debug('Template syntax error in %s!', template_name + '.html')
+    except exceptions.html_error_template().render():
+        log.debug('Template error in %s.html.', template_name)
         abort(500)

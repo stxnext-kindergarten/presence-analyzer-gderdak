@@ -1,9 +1,9 @@
-{% extends "base.html" %}
-{% block google_load %}
+<%inherit file="base.html"/>
+<%block name="google_load">
     google.load("visualization", "1", {packages: ["corechart"], 'language': 'pl'});
-{% endblock %}
-{% block getJson %}
-$.getJSON("{{ url_for('mean_time_weekday_view', user_id=0) }}"+selected_user, function(result) {
+</%block>
+<%block name="getJson">
+$.getJSON("${url_for('mean_time_weekday_view', user_id=0)}"+selected_user, function(result) {
     $.each(result, function(index, value) {
         value[1] = parseInterval(value[1]);
     });
@@ -23,6 +23,5 @@ $.getJSON("{{ url_for('mean_time_weekday_view', user_id=0) }}"+selected_user, fu
     var chart = new google.visualization.ColumnChart(chart_div[0]);
     chart.draw(data, options);
 });
-{% endblock %}
-{% set active_page = "mean_time_weekday" %}
-{% block content_title %}Presence mean time{% endblock %}
+</%block>
+<%block name="content_title">Presence mean time</%block>
