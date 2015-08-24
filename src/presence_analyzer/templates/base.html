@@ -11,38 +11,6 @@
     <link href="${url_for('static', filename='css/style.css')}" media="all" rel="stylesheet" type="text/css" />
     <script src="${url_for('static', filename='js/jquery.min.js')}"></script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
-    function parseInterval(value) {
-        var result = new Date(1, 1, 1);
-        result.setMilliseconds(value * 1000);
-        return result;
-    }
-    </script>
-    <script type="text/javascript">
-    <%block name="google_load"></%block>
-        (function($) {
-        $(document).ready(function() {
-            var loading = $('#loading');
-            $.getJSON("${url_for('users_view')}", function(result) {
-                var dropdown = $("#user_id");
-                $.each(result, function(item) {
-                    dropdown.append($("<option />").val(this.user_id).text(this.name));
-                });
-                dropdown.show();
-                loading.hide();
-            });
-            $('#user_id').change(function() {
-                var selected_user = $("#user_id").val(),
-                    chart_div = $('#chart_div');
-                if (selected_user) {
-                    loading.show();
-                    chart_div.hide();
-                    <%block name="getJson"></%block>
-                }
-            });
-        });
-    })(jQuery);
-</script>
 </head>
 <body>
     <div id="main">
@@ -66,15 +34,56 @@
         <div id="content">
             <h2><%block name="content_title"></%block></h2>
             <p>
+                <div id="avatar">
+                    <img src=""/>
+                </div>
                 <select id="user_id" style="display: none">
                     <option value="">--</option>
                 </select>
                 <div id="chart_div" style="display: none"></div>
                 <div id="loading">
-                    <img src="${url_for('static', filename='/img/loading.gif')}"/>
+                    <img src="${url_for('static', filename='img/loading.gif')}"/>
                 </div>
             </p>
         </div>
     </div>
+    <script type="text/javascript">
+    function parseInterval(value) {
+        var result = new Date(1, 1, 1);
+        result.setMilliseconds(value * 1000);
+        return result;
+    }
+    </script>
+    <script type="text/javascript">
+    <%block name="google_load"></%block>
+        (function($) {
+        $(document).ready(function() {
+            var loading = $("#loading"),
+                avatar_pic = $("#avatar img"),
+                avatars = {},
+                dropdown = $("#user_id");
+            avatar_pic.hide();
+            $.getJSON("${url_for('users_view')}", function(result) {
+                $.each(result, function(item) {
+                    dropdown.append($("<option />").val(this.user_id).text(this.name));
+                    avatars[this.user_id] = this.avatar;
+                });
+                dropdown.show();
+                loading.hide();
+            });
+            $("#user_id").change(function() {
+                var selected_user = $("#user_id").val(),
+                    chart_div = $("#chart_div");
+                avatar_pic.attr("src", avatars[selected_user]);
+                avatar_pic.show();
+                if (selected_user) {
+                    loading.show();
+                    chart_div.hide();
+                    <%block name="getJson"></%block>
+                }
+            });
+        });
+    })(jQuery);
+</script>
 </body>
 </html>

@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {% block parseinterval %}
+    <%block name="parseinterval" %>
 </head>
 <body>
     <div id="main">
         <div id="header">
             <h1>Presence analyzer</h1>
-            {% set active_page = active_page|default('presence_weekday') %}
+            <%set active_page = active_page|default('presence_weekday')>
             <ul>
-                {% for href, id, caption in navigation_bar %}
-                <li{% if id == active_page %} id="selected"{% endif %}><a href="{{ href|e }}">{{ caption|e }}</a></li>
-                {% endfor %}
+                % for href, id, caption in navigation_bar %
+                <li <%if id == active_page> id="selected" <%endif>><a href="{{ href|e }}">{{ caption|e }}</a></li>
+                <%endfor>
             </ul>
         </div>
         <div id="content">
-            <h2>{% block content_title %}{% endblock %}</h2>
+            <h2><%block content_title><%endblock></h2>
             <p>
                 <select id="user_id" style="display: none">
                     <option value="">--</option>

@@ -2,14 +2,15 @@
 """
 Helper functions used in views.
 """
-import csv
 import calendar
+import csv
 import logging
 
 from datetime import datetime
 from flask import Response
 from functools import wraps
 from json import dumps
+
 from presence_analyzer.main import app
 
 log = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -117,4 +118,25 @@ def mean_presence_hours(items):
     return [
         [calendar.day_abbr[k], mean(v['start']), mean(v['end'])]
         for k, v in week.iteritems()
+    ]
+
+
+def parse_tree(root):
+    """
+    Parsing xml root.
+    """
+    server = {item.tag: item.text for item in root.getroot().find('server')}
+    url = '{}://{}:{}'.format(
+        server['protocol'],
+        server['host'],
+        server['port']
+    )
+    users_from_xml = root.getroot().find('users')
+    return [
+        {
+            'user_id': int(user.get('id')),
+            'name': user.find('name').text,
+            'avatar': '{}{}'.format(url, user.find('avatar').text)
+        }
+        for user in users_from_xml
     ]
