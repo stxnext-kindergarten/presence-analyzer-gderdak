@@ -10,10 +10,12 @@ from flask import abort, redirect, url_for
 from flask.ext.mako import render_template
 from mako import exceptions
 from mako.exceptions import TopLevelLookupException
+from lxml import etree
 
 from presence_analyzer.main import app
 from presence_analyzer.utils import (
-    get_data, group_by_weekday, jsonify, mean, mean_presence_hours
+    get_data, group_by_weekday, jsonify, mean, mean_presence_hours,
+    parse_tree,
 )
 
 log = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -36,11 +38,17 @@ def users_view():
     """
     Users listing for dropdown.
     """
-    data = get_data()
-    return [
-        {'user_id': i, 'name': 'User {0}'.format(str(i))}
-        for i in data.keys()
-    ]
+    try:
+        root = etree.parse(app.config['DATA_XML'])
+        users = parse_tree(root)
+    except IOError:
+        log.exception('FileError!')
+        abort(404)
+    except ValueError:
+        log.exception('ParsingError!')
+        abort(500)
+    else:
+        return users
 
 
 @app.route('/api/v1/mean_time_weekday/<int:user_id>', methods=['GET'])
@@ -59,7 +67,6 @@ def mean_time_weekday_view(user_id):
         (calendar.day_abbr[weekday], mean(intervals))
         for weekday, intervals in enumerate(weekdays)
     ]
-
     return result
 
 

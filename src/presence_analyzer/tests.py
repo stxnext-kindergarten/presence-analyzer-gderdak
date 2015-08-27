@@ -15,6 +15,12 @@ from presence_analyzer import main, utils, views
 TEST_DATA_CSV = os.path.join(
     os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'test_data.csv'
 )
+TEST_DATA_XML = os.path.join(
+    os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'test_xml.xml'
+)
+DELETED_XML_FILE = os.path.join(
+    os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'deleted_xml.xml'
+)
 # pylint: disable=maybe-no-member, too-many-public-methods
 
 
@@ -28,6 +34,7 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         Before each test, set up a environment.
         """
         main.app.config.update({'DATA_CSV': TEST_DATA_CSV})
+        main.app.config.update({'DATA_XML': TEST_DATA_XML})
         self.client = main.app.test_client()
 
     def tearDown(self):
@@ -60,11 +67,22 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         Test users listing.
         """
         resp = self.client.get('/api/v1/users')
-        self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content_type, 'application/json')
+        self.assertEqual(resp.status_code, 200)
         test_data = json.loads(resp.data)
         self.assertEqual(len(test_data), 2)
-        self.assertDictEqual(test_data[0], {'user_id': 10, 'name': 'User 10'})
+        self.assertDictEqual(
+            test_data[0],
+            {
+                'name': 'Adam P.',
+                'avatar': 'https://intranet.stxnext.pl:443/api/images/users/141',
+                'user_id': 141
+            }
+        )
+        main.app.config.update({'DATA_XML': DELETED_XML_FILE})
+        resp = self.client.get('/api/v1/users')
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.content_type, 'text/html')
 
     def test_mean_time_weekday_view(self):
         """
