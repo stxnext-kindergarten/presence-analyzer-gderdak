@@ -2,18 +2,22 @@
 """
 Helper functions used in views.
 """
+
 import calendar
 import csv
 import logging
+import time
 
 from datetime import datetime
 from flask import Response
 from functools import wraps
 from json import dumps
+from threading import Lock
 
-from presence_analyzer.main import app
+from presence_analyzer.main import APP
 
-log = logging.getLogger(__name__)  # pylint: disable=invalid-name
+CACHE_STORAGE = {}
+LOG = logging.getLogger(__name__)
 
 
 def jsonify(function):
@@ -32,6 +36,43 @@ def jsonify(function):
     return inner
 
 
+def memoize(duration_time):
+    """
+    Cache function response for a given amount of time in seconds.
+    """
+    lock = Lock()
+
+    def _memoize(function):
+        """
+        This docstring will be overridden.
+        """
+        @wraps(function)
+        def __memoize(*args, **kwargs):
+            """
+            This docstring will be overridden by @wraps decorator.
+            """
+            f_name = function.__name__
+            arguments = [str(arg) for arg in args]
+            kwarguments = [
+                '%s:%s' % (key, hash(value)) for key, value in kwargs.items()
+            ]
+            time_now = int(time.time())
+            key = '{}{}{}'.format(f_name, arguments, kwarguments)
+            with lock:
+                if (key in CACHE_STORAGE and
+                        time_now - CACHE_STORAGE[key]['time'] < duration_time):
+                    return CACHE_STORAGE[key]['value']
+                value = function(*args, **kwargs)
+                CACHE_STORAGE[key] = {
+                    'time': time_now,
+                    'value': value
+                }
+                return value
+        return __memoize
+    return _memoize
+
+
+@memoize(600)
 def get_data():
     """
     Extracts presence data from CSV file and groups it by user_id.
@@ -51,7 +92,7 @@ def get_data():
     }
     """
     data = {}
-    with open(app.config['DATA_CSV'], 'r') as csvfile:
+    with open(APP.config['DATA_CSV'], 'r') as csvfile:
         presence_reader = csv.reader(csvfile, delimiter=',')
         for i, row in enumerate(presence_reader):
             if len(row) != 4:
@@ -64,7 +105,7 @@ def get_data():
                 start = datetime.strptime(row[2], '%H:%M:%S').time()
                 end = datetime.strptime(row[3], '%H:%M:%S').time()
             except (ValueError, TypeError):
-                log.debug('Problem with line %d: ', i, exc_info=True)
+                LOG.debug('Problem with line %d: ', i, exc_info=True)
 
             data.setdefault(user_id, {})[date] = {'start': start, 'end': end}
     return data
@@ -82,11 +123,11 @@ def group_by_weekday(items):
     return result
 
 
-def seconds_since_midnight(time):
+def seconds_since_midnight(time_data):
     """
     Calculates amount of seconds since midnight.
     """
-    return time.hour * 3600 + time.minute * 60 + time.second
+    return time_data.hour * 3600 + time_data.minute * 60 + time_data.second
 
 
 def interval(start, end):

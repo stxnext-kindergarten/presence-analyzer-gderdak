@@ -44,9 +44,9 @@ def make_debug(global_conf={}, **conf):
 def make_shell():
     """Interactive Flask Shell"""
     from flask import request
-    app = make_app()
-    http = app.test_client()
-    reqctx = app.test_request_context
+    APP = make_app()
+    http = APP.test_client()
+    reqctx = APP.test_request_context
     return locals()
 
 
