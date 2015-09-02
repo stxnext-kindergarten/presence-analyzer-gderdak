@@ -1,8 +1,8 @@
+# pylint: disable=duplicate-code
 # -*- coding: utf-8 -*-
 """
 Presence analyzer unit tests.
 """
-
 from __future__ import unicode_literals
 
 import datetime
@@ -10,7 +10,11 @@ import json
 import os.path
 import unittest
 
-from presence_analyzer import main, utils, views
+from mock import Mock
+
+from presence_analyzer import (  # pylint: disable=unused-import
+    main, utils, views
+)
 
 TEST_DATA_CSV = os.path.join(
     os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'test_data.csv'
@@ -21,7 +25,6 @@ TEST_DATA_XML = os.path.join(
 DELETED_XML_FILE = os.path.join(
     os.path.dirname(__file__), '..', '..', 'runtime', 'data', 'deleted_xml.xml'
 )
-# pylint: disable=maybe-no-member, too-many-public-methods
 
 
 class PresenceAnalyzerViewsTestCase(unittest.TestCase):
@@ -33,9 +36,9 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         """
         Before each test, set up a environment.
         """
-        main.app.config.update({'DATA_CSV': TEST_DATA_CSV})
-        main.app.config.update({'DATA_XML': TEST_DATA_XML})
-        self.client = main.app.test_client()
+        main.APP.config.update({'DATA_CSV': TEST_DATA_CSV})
+        main.APP.config.update({'DATA_XML': TEST_DATA_XML})
+        self.client = main.APP.test_client()
 
     def tearDown(self):
         """
@@ -74,12 +77,15 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         self.assertDictEqual(
             test_data[0],
             {
-                'name': 'Adam P.',
-                'avatar': 'https://intranet.stxnext.pl:443/api/images/users/141',
-                'user_id': 141
+                'name':
+                    'Adam P.',
+                'avatar':
+                    'https://intranet.stxnext.pl:443/api/images/users/141',
+                'user_id':
+                    141
             }
         )
-        main.app.config.update({'DATA_XML': DELETED_XML_FILE})
+        main.APP.config.update({'DATA_XML': DELETED_XML_FILE})
         resp = self.client.get('/api/v1/users')
         self.assertEqual(resp.status_code, 404)
         self.assertEqual(resp.content_type, 'text/html')
@@ -93,9 +99,8 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         resp = self.client.get('/api/v1/mean_time_weekday/10')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content_type, 'application/json')
-        test_data = json.loads(resp.data)
         self.assertListEqual(
-            test_data,
+            json.loads(resp.data),
             [
                 ['Mon', 0],
                 ['Tue', 30047.0],
@@ -116,9 +121,8 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         resp = self.client.get('/api/v1/presence_weekday/10')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.content_type, 'application/json')
-        test_data = json.loads(resp.data)
         self.assertListEqual(
-            test_data,
+            json.loads(resp.data),
             [
                 ['Weekday', 'Presence (s)'],
                 ['Mon', 0],
@@ -140,9 +144,8 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         response = self.client.get('/api/v1/presence_start_end/10')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
-        test_data = json.loads(response.data)
         self.assertListEqual(
-            test_data,
+            json.loads(response.data),
             [
                 ['Mon', 0, 0],
                 ['Tue', 34745.0, 64792.0],
@@ -176,7 +179,7 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         """
         Before each test, set up a environment.
         """
-        main.app.config.update({'DATA_CSV': TEST_DATA_CSV})
+        main.APP.config.update({'DATA_CSV': TEST_DATA_CSV})
 
     def tearDown(self):
         """
@@ -261,6 +264,26 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
             ]
         )
 
+    def test_memoize(self):
+        """
+        Test that the cache is working as intended.
+        """
+        utils.CACHE_STORAGE = {}
+        cache = utils.CACHE_STORAGE
+        self.assertDictEqual(cache, {})
+        mock_object = Mock(__name__=str('MockFunc'))
+        mock_object.return_value = 'Value #1'
+        test_func = utils.memoize(5)(mock_object)
+        test_func()
+        self.assertEqual(cache.keys()[0], 'MockFunc[][]')
+        self.assertEqual(cache.values()[0]['value'], 'Value #1')
+        mock_object.return_value = 'Value #2'
+        test_func()
+        self.assertEqual(cache.values()[0]['value'], 'Value #1')
+        test_func = utils.memoize(0)(mock_object)
+        test_func()
+        self.assertEqual(cache.values()[0]['value'], 'Value #2')
+
 
 def suite():
     """
@@ -270,7 +293,6 @@ def suite():
     base_suite.addTest(unittest.makeSuite(PresenceAnalyzerViewsTestCase))
     base_suite.addTest(unittest.makeSuite(PresenceAnalyzerUtilsTestCase))
     return base_suite
-
 
 if __name__ == '__main__':
     unittest.main()

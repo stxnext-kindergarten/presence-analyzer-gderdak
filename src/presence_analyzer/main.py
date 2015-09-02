@@ -1,9 +1,10 @@
+# pylint: disable=duplicate-code
 # -*- coding: utf-8 -*-
 """
 Flask app initialization.
 """
 from flask import Flask
-from flask.ext.mako import MakoTemplates
+from flask_mako import MakoTemplates
 
-app = Flask(__name__)  # pylint: disable=invalid-name
-mako = MakoTemplates(app)
+APP = Flask(__name__)
+MAKO_TPL = MakoTemplates(APP)

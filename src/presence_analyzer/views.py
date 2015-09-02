@@ -7,21 +7,21 @@ import calendar
 import logging
 
 from flask import abort, redirect, url_for
-from flask.ext.mako import render_template
+from flask_mako import render_template
+from lxml import etree
 from mako import exceptions
 from mako.exceptions import TopLevelLookupException
-from lxml import etree
 
-from presence_analyzer.main import app
+from presence_analyzer.main import APP
 from presence_analyzer.utils import (
     get_data, group_by_weekday, jsonify, mean, mean_presence_hours,
     parse_tree,
 )
 
-log = logging.getLogger(__name__)  # pylint: disable=invalid-name
+LOG = logging.getLogger(__name__)
 
 
-@app.route('/')
+@APP.route('/')
 def mainpage():
     """
     Redirects to front page.
@@ -32,26 +32,26 @@ def mainpage():
     ))
 
 
-@app.route('/api/v1/users', methods=['GET'])
+@APP.route('/api/v1/users', methods=['GET'])
 @jsonify
 def users_view():
     """
     Users listing for dropdown.
     """
     try:
-        root = etree.parse(app.config['DATA_XML'])
-        users = parse_tree(root)
+        tree = etree.parse(APP.config['DATA_XML'])
+        users = parse_tree(tree)
     except IOError:
-        log.exception('FileError!')
+        LOG.exception('FileError!')
         abort(404)
     except ValueError:
-        log.exception('ParsingError!')
+        LOG.exception('ParsingError!')
         abort(500)
     else:
         return users
 
 
-@app.route('/api/v1/mean_time_weekday/<int:user_id>', methods=['GET'])
+@APP.route('/api/v1/mean_time_weekday/<int:user_id>', methods=['GET'])
 @jsonify
 def mean_time_weekday_view(user_id):
     """
@@ -59,7 +59,7 @@ def mean_time_weekday_view(user_id):
     """
     data = get_data()
     if user_id not in data:
-        log.debug('User %s not found!', user_id)
+        LOG.debug('User %s not found!', user_id)
         abort(404)
 
     weekdays = group_by_weekday(data[user_id])
@@ -70,7 +70,7 @@ def mean_time_weekday_view(user_id):
     return result
 
 
-@app.route('/api/v1/presence_weekday/<int:user_id>', methods=['GET'])
+@APP.route('/api/v1/presence_weekday/<int:user_id>', methods=['GET'])
 @jsonify
 def presence_weekday_view(user_id):
     """
@@ -78,7 +78,7 @@ def presence_weekday_view(user_id):
     """
     data = get_data()
     if user_id not in data:
-        log.debug('User %s not found!', user_id)
+        LOG.debug('User %s not found!', user_id)
         abort(404)
 
     weekdays = group_by_weekday(data[user_id])
@@ -91,7 +91,7 @@ def presence_weekday_view(user_id):
     return result
 
 
-@app.route('/api/v1/presence_start_end/<int:user_id>', methods=['GET'])
+@APP.route('/api/v1/presence_start_end/<int:user_id>', methods=['GET'])
 @jsonify
 def mean_presence_hours_view(user_id):
     """
@@ -99,12 +99,12 @@ def mean_presence_hours_view(user_id):
     """
     data = get_data()
     if user_id not in data:
-        log.debug('User %s not found!', user_id)
+        LOG.debug('User %s not found!', user_id)
         abort(404)
     return mean_presence_hours(data[user_id])
 
 
-@app.route('/<template_name>', methods=['GET'])
+@APP.route('/<template_name>', methods=['GET'])
 def render_correct_template(template_name):
     """
     Check and render correct template for given url.
@@ -112,8 +112,8 @@ def render_correct_template(template_name):
     try:
         return render_template(template_name + '.html')
     except TopLevelLookupException:
-        log.debug('Template %s.html not found.', template_name)
+        LOG.debug('Template %s.html not found.', template_name)
         abort(404)
     except exceptions.html_error_template().render():
-        log.debug('Template error in %s.html.', template_name)
+        LOG.debug('Template error in %s.html.', template_name)
         abort(500)

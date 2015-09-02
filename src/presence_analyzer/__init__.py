@@ -2,5 +2,6 @@
 """
 Presence analyzer.
 """
-from .main import app
+
+from .main import APP
 from . import views
