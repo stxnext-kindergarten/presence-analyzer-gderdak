@@ -27,10 +27,10 @@ del _buildout_path
 
 # bin/paster serve parts/etc/deploy.ini
 def make_app(global_conf={}, config=DEPLOY_CFG, debug=False):
-    from presence_analyzer import app
-    app.config.from_pyfile(abspath(config))
-    app.debug = debug
-    return app
+    from presence_analyzer import APP
+    APP.config.from_pyfile(abspath(config))
+    APP.debug = debug
+    return APP
 
 
 # bin/paster serve parts/etc/debug.ini

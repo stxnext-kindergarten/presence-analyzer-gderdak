@@ -15,7 +15,7 @@ from mako.exceptions import TopLevelLookupException
 from presence_analyzer.main import APP
 from presence_analyzer.utils import (
     get_data, group_by_weekday, jsonify, mean, mean_presence_hours,
-    parse_tree,
+    parse_tree, get_all_days, get_employees
 )
 
 LOG = logging.getLogger(__name__)
@@ -102,6 +102,32 @@ def mean_presence_hours_view(user_id):
         LOG.debug('User %s not found!', user_id)
         abort(404)
     return mean_presence_hours(data[user_id])
+
+
+@APP.route('/api/v1/days/', methods=['GET'])
+@jsonify
+def view_all_days():
+    """
+    Dates listing for dropdown.
+    """
+    return sorted(get_all_days().items())
+
+
+@APP.route('/api/v1/top_five/<int:given_date>', methods=['GET'])
+@jsonify
+def view_top_five_employees(given_date):
+    """
+    Returns five top employees that have longest presence time at given date.
+    """
+    days = get_all_days()
+    if given_date not in days:
+        LOG.debug('Wrong date (%s) or date doesn\'t exist.', given_date)
+        abort(404)
+    return sorted(
+        get_employees(given_date).items(),
+        key=lambda val: val[1],
+        reverse=True
+    )
 
 
 @APP.route('/<template_name>', methods=['GET'])

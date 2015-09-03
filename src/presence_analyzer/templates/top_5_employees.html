@@ -1,0 +1,47 @@
+<%inherit file="base.html"/>
+<%block name="google_load">
+    google.load("visualization", "1", {packages: ['corechart'], 'language': 'pl'});
+</%block>
+<%block name="getJson">
+$.getJSON("${url_for('users_view')}", function(users_result) {
+    var users = {};
+    $.each(users_result, function(item) {
+        users[this.user_id] = this.name;
+    });
+
+    $.getJSON("${url_for('view_top_five_employees', given_date=0)}"+selected_option, function(result) {
+        var new_result = [];
+        $.each(result, function(index, value) {
+            if (typeof users[value[0]] !== "undefined" && new_result.length < 5){
+                value[0] = users[value[0]];
+                value[1] = parseInterval(value[1]);
+                new_result.push(value);
+            }
+        });
+        if (new_result.length > 0) {
+            var data = new google.visualization.DataTable(),
+                options = {
+                    vAxis: {title: 'Presence time'}
+                },
+                formatter = new google.visualization.DateFormat(
+                    {pattern: 'HH:mm:ss'}
+                );
+            data.addColumn('string', 'User name');
+            data.addColumn('datetime', 'Presence time (h:m:s)' );
+            data.addRows(new_result);
+            formatter.format(data, 1);
+            chart_div.show();
+            loading.hide();
+            var chart = new google.visualization.ColumnChart(chart_div[0]);
+            chart.draw(data, options);
+        } else {
+            chart_div.empty().append("No users avaliable for this date.").show(); 
+            loading.hide();
+        }
+    });
+}).fail(function() {
+    chart_div.empty().append("Wrong url format or date doesn't exist.").show();
+    loading.hide();
+});
+</%block>
+<%block name="content_title">Top 5 employees</%block>

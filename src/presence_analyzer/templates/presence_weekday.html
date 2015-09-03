@@ -3,13 +3,16 @@
     google.load("visualization", "1", {packages: ["corechart"], 'language': 'pl'});
 </%block>
 <%block name="getJson">
-$.getJSON("${url_for('presence_weekday_view', user_id=0)}"+selected_user, function(result) {
+$.getJSON("${url_for('presence_weekday_view', user_id=0)}"+selected_option, function(result) {
     var data = google.visualization.arrayToDataTable(result),
         options = {};
     chart_div.show();
     loading.hide();
     var chart = new google.visualization.PieChart(chart_div[0]);
     chart.draw(data, options);
+}).fail(function() {
+    chart_div.empty().append("No data avaliable for this user.").show();
+    loading.hide();
 });
 </%block>
 <%block name="content_title">Presence mean time</%block>
