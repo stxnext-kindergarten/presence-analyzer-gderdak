@@ -73,16 +73,14 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         self.assertEqual(resp.content_type, 'application/json')
         self.assertEqual(resp.status_code, 200)
         test_data = json.loads(resp.data)
-        self.assertEqual(len(test_data), 2)
+        self.assertEqual(len(test_data), 6)
         self.assertDictEqual(
-            test_data[0],
+            test_data[-1],
             {
-                'name':
-                    'Adam P.',
+                'name': 'Wojciech L.',
                 'avatar':
-                    'https://intranet.stxnext.pl:443/api/images/users/141',
-                'user_id':
-                    141
+                    'https://intranet.stxnext.pl:443/api/images/users/15',
+                'user_id': 15
             }
         )
         main.APP.config.update({'DATA_XML': DELETED_XML_FILE})

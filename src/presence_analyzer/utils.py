@@ -7,6 +7,7 @@ import calendar
 import csv
 import logging
 import time
+import locale
 
 from datetime import datetime
 from flask import Response
@@ -16,6 +17,7 @@ from threading import Lock
 
 from presence_analyzer.main import APP
 
+locale.setlocale(locale.LC_COLLATE, 'pl_PL.utf8')
 CACHE_STORAGE = {}
 LOG = logging.getLogger(__name__)
 
@@ -173,14 +175,14 @@ def parse_tree(root):
         server['port']
     )
     users_from_xml = root.getroot().find('users')
-    return [
+    return sorted([
         {
             'user_id': int(user.get('id')),
             'name': user.find('name').text,
             'avatar': '{}{}'.format(url, user.find('avatar').text)
         }
         for user in users_from_xml
-    ]
+    ], key=lambda user: user['name'], cmp=locale.strcoll)
 
 
 def get_all_days():
