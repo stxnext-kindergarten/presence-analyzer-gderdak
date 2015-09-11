@@ -14,5 +14,21 @@
             <avatar>/api/images/users/122</avatar>
             <name>Artur L.</name>
         </user>
+        <user id="15">
+            <avatar>/api/images/users/15</avatar>
+            <name>Wojciech L.</name>
+        </user>
+        <user id="121">
+            <avatar>/api/images/users/121</avatar>
+            <name>Łukasz J.</name>
+        </user>
+        <user id="154">
+            <avatar>/api/images/users/154</avatar>
+            <name>Łukasz K.</name>
+        </user>
+        <user id="189">
+            <avatar>/api/images/users/189</avatar>
+            <name>Karol Ż.</name>
+        </user>
     </users>
 </intranet>
