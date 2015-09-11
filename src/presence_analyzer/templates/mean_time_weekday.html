@@ -3,25 +3,27 @@
     google.load("visualization", "1", {packages: ["corechart"], 'language': 'pl'});
 </%block>
 <%block name="getJson">
-$.getJSON("${url_for('mean_time_weekday_view', user_id=0)}"+selected_user, function(result) {
+$.getJSON("${url_for('mean_time_weekday_view', user_id=0)}"+selected_option, function(result) {
     $.each(result, function(index, value) {
         value[1] = parseInterval(value[1]);
     });
     var data = new google.visualization.DataTable(),
-        options = {
-            hAxis: {title: 'Weekday'}
-        },
+        options = {hAxis: {title: 'Weekday'}},
         formatter = new google.visualization.DateFormat(
             {pattern: 'HH:mm:ss'}
         );
     data.addColumn('string', 'Weekday');
     data.addColumn('datetime', 'Mean time (h:m:s)');
+    console.log(result);
     data.addRows(result);
     formatter.format(data, 1);
     chart_div.show();
     loading.hide();
     var chart = new google.visualization.ColumnChart(chart_div[0]);
     chart.draw(data, options);
+}).fail(function() {
+    chart_div.empty().append("No data for current user.").show();
+    loading.hide();
 });
 </%block>
 <%block name="content_title">Presence mean time</%block>

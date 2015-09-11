@@ -181,3 +181,33 @@ def parse_tree(root):
         }
         for user in users_from_xml
     ]
+
+
+def get_all_days():
+    """
+    Get list of all day dates from data.
+    """
+    data = get_data()
+    days = {}
+    days = {
+        int(day.strftime('%y%m%d')): day.strftime('%d.%m.%y')
+        for user in data.keys()
+        for day in data[user]
+        if day.strftime('%d.%m.%y') not in days
+    }
+    return days
+
+
+def get_employees(given_date):
+    """
+    Get list of employees that have been working at given date.
+    """
+    data = get_data()
+    date_object = datetime.strptime(str(given_date), "%y%m%d").date()
+    employees = {
+        user: interval(data[user][date]['start'], data[user][date]['end'])
+        for user in data
+        for date in data[user]
+        if date == date_object
+    }
+    return employees

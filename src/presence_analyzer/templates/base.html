@@ -20,6 +20,7 @@
                 ('/presence_weekday', 'Presence by weekday'),
                 ('/mean_time_weekday', 'Presence mean time'),
                 ('/presence_start_end', 'Presence mean start-end'),
+                ('/top_5_employees', 'Top 5 employees'),
             ] %>
             <ul>
                 % for href, caption in navigation_bar:
@@ -37,7 +38,7 @@
                 <div id="avatar">
                     <img src=""/>
                 </div>
-                <select id="user_id" style="display: none">
+                <select id="dropdown" style="display: none">
                     <option value="">--</option>
                 </select>
                 <div id="chart_div" style="display: none"></div>
@@ -49,20 +50,28 @@
     </div>
     <script type="text/javascript">
     function parseInterval(value) {
-        var result = new Date(1, 1, 1);
-        result.setMilliseconds(value * 1000);
+        var result = new Date(0);
+        result.setSeconds(value);
         return result;
     }
     </script>
     <script type="text/javascript">
     <%block name="google_load"></%block>
+    <% pages_with_users_listing = [
+        ('/presence_weekday'),
+        ('/mean_time_weekday'),
+        ('/presence_start_end'),
+    ] %>
         (function($) {
         $(document).ready(function() {
             var loading = $("#loading"),
                 avatar_pic = $("#avatar img"),
                 avatars = {},
-                dropdown = $("#user_id");
+                dropdown = $("#dropdown");
             avatar_pic.hide();
+
+        % if request.path in pages_with_users_listing :
+
             $.getJSON("${url_for('users_view')}", function(result) {
                 $.each(result, function(item) {
                     dropdown.append($("<option />").val(this.user_id).text(this.name));
@@ -71,17 +80,30 @@
                 dropdown.show();
                 loading.hide();
             });
-            $("#user_id").change(function() {
-                var selected_user = $("#user_id").val(),
+        % else :
+            $.getJSON("${url_for('view_all_days')}", function(result) {
+                $.each(result, function(item) {
+                    dropdown.append($("<option />").val(result[item][0]).text(result[item][1]));
+                });
+                dropdown.show();
+                loading.hide();
+            });
+            avatar_pic.remove();
+
+        % endif
+
+            $("#dropdown").change(function() {
+                var selected_option = $("#dropdown").val(),
                     chart_div = $("#chart_div");
-                avatar_pic.attr("src", avatars[selected_user]);
+                avatar_pic.attr("src", avatars[selected_option]);
                 avatar_pic.show();
-                if (selected_user) {
+                if (selected_option) {
                     loading.show();
                     chart_div.hide();
                     <%block name="getJson"></%block>
                 }
             });
+
         });
     })(jQuery);
 </script>

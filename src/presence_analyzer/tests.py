@@ -169,6 +169,37 @@ class PresenceAnalyzerViewsTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
 
+    def test_view_all_days(self):
+        """
+        Test for getting all unique dates and its datecodes from data.
+        """
+        response = self.client.get('/api/v1/days/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content_type, 'application/json')
+        self.assertListEqual(
+            json.loads(response.data),
+            [
+                [130905, '05.09.13'],
+                [130909, '09.09.13'],
+                [130910, '10.09.13'],
+                [130911, '11.09.13'],
+                [130912, '12.09.13'],
+                [130913, '13.09.13']
+            ]
+        )
+
+    def test_view_top_five_employees(self):
+        """
+        Test for getting all ids and worked time of employees
+        that have been working at given date.
+        """
+        response = self.client.get('/api/v1/top_five/130901')
+        self.assertEqual(response.status_code, 404)
+        response = self.client.get('/api/v1/top_five/130909')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content_type, 'application/json')
+        self.assertListEqual(json.loads(response.data), [[11, 24123]])
+
 
 class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
     """
@@ -283,6 +314,34 @@ class PresenceAnalyzerUtilsTestCase(unittest.TestCase):
         test_func = utils.memoize(0)(mock_object)
         test_func()
         self.assertEqual(cache.values()[0]['value'], 'Value #2')
+
+    def test_get_all_days(self):
+        """
+        Test for proper listing of dates and dates codes from data.
+        """
+        data = utils.get_all_days()
+        self.assertEqual(type(data), dict)
+        self.assertEqual(len(data), 6)
+        self.assertDictEqual(
+            data,
+            {
+                130905: '05.09.13',
+                130909: '09.09.13',
+                130910: '10.09.13',
+                130911: '11.09.13',
+                130912: '12.09.13',
+                130913: '13.09.13'
+            }
+        )
+
+    def test_get_employees(self):
+        """
+        Test for proper listing of gettin employees of certain date.
+        """
+        data = utils.get_employees('130913')
+        self.assertEqual(type(data), dict)
+        self.assertEqual(len(data), 1)
+        self.assertDictEqual(data, {11: 6426})
 
 
 def suite():
